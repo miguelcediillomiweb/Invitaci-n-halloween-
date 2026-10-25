@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Special+Elite&display=swap" rel="stylesheet">
 <style>
-:root{--night:#07060d;--bone:#f1ead2;--pumpkin:#ff7a1a;--wood:#5a3a1f}
+:root{--vh:1vh;--night:#07060d;--bone:#f1ead2;--pumpkin:#ff7a1a;--wood:#5a3a1f}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--night);overflow:hidden;font-family:'Special Elite','Courier New',monospace;color:var(--bone)}
 #sky{position:fixed;inset:0;z-index:0}
@@ -20,18 +20,18 @@ html,body{margin:0;height:100%;background:var(--night);overflow:hidden;font-fami
 @keyframes drift{to{transform:translateX(25%)}}
 
 /* ===== ESCENA PRINCIPAL ===== */
-.stage{position:relative;z-index:2;height:100dvh;max-width:min(100vw,calc(100dvh*.5625));margin:0 auto;padding:10px 12px 16px;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(6px,1.6dvh,18px);
+.stage{position:relative;z-index:2;height:calc(var(--vh)*100);max-width:min(100vw,calc(calc(var(--vh)*100)*.5625));margin:0 auto;padding:10px 12px 16px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(6px,calc(var(--vh)*1.6),18px);
   filter:brightness(.25) blur(3px);transition:filter 1.6s ease 1s}
 .opened .stage{filter:none}
 h1{margin:0;font-family:'Pirata One','Georgia',serif;font-weight:400;text-align:center;line-height:1;letter-spacing:.01em;
-  font-size:clamp(40px,min(13vw,8dvh),70px);color:var(--pumpkin);
+  font-size:clamp(40px,min(13vw,calc(var(--vh)*8)),70px);color:var(--pumpkin);
   text-shadow:0 0 12px rgba(255,122,26,.7),0 0 40px rgba(255,80,0,.4)}
 .opened h1{animation:flicker 1.6s steps(1) 1.2s both}
 @keyframes flicker{0%{opacity:0}8%{opacity:1}12%{opacity:.2}20%{opacity:1}30%{opacity:.4}34%{opacity:1}60%{opacity:.85}64%{opacity:1}100%{opacity:1}}
 
 /* ===== TELEVISIÓN VIEJA ===== */
-.tv{position:relative;flex:none;margin-top:62px;width:max(250px,min(94vw,470px,calc((100dvh - 390px)*1.05)))}
+.tv{position:relative;flex:none;margin-top:62px;width:max(250px,min(94vw,470px,calc((calc(var(--vh)*100) - 330px)*1.05)))}
 .rod{position:absolute;bottom:100%;left:50%;width:3px;height:72px;margin-left:-1.5px;transform-origin:50% 100%;
   background:linear-gradient(90deg,#eee,#777);border-radius:2px}
 .rod::after{content:'';position:absolute;top:-4px;left:-2px;width:7px;height:7px;border-radius:50%;background:#bbb}
@@ -47,7 +47,7 @@ h1{margin:0;font-family:'Pirata One','Georgia',serif;font-weight:400;text-align:
 @keyframes tvOn{0%{opacity:1;transform:scale(1,.005);filter:brightness(5)}40%{opacity:1;transform:scale(1,.03);filter:brightness(3)}75%{opacity:1;transform:scale(1,1.04);filter:brightness(1.8)}100%{opacity:1;transform:scale(1);filter:none}}
 .on canvas,.nosig{position:absolute;inset:0;width:100%;height:100%;border:0}
 .vid{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);overflow:hidden}
-.vid.land{width:min(100%,177.78dvh);aspect-ratio:16/9}
+.vid.land{width:min(100%,calc(var(--vh)*177.78));aspect-ratio:16/9}
 .vid.port{height:100%;aspect-ratio:9/16;max-width:100%}
 .vid iframe{position:absolute;left:0;top:-90px;width:100%;height:calc(100% + 180px);border:0;opacity:0;background:#000;pointer-events:none}
 .live .vid iframe{opacity:1}
@@ -74,13 +74,12 @@ h1{margin:0;font-family:'Pirata One','Georgia',serif;font-weight:400;text-align:
 .screen .glass{transition:opacity .8s}
 .screen.big .glass{opacity:0}
 
-
 /* ===== REJA DEL CEMENTERIO ===== */
 .gate{position:fixed;inset:0;z-index:10;background:rgba(4,3,9,.6);outline:none;
   display:flex;justify-content:center;transition:background 1.4s ease .6s}
 .gate.open{background:transparent;cursor:default}
 .gate.done{display:none}
-.gate-in{position:relative;width:min(100vw,calc(100dvh*.5625));height:100dvh;perspective:1200px}
+.gate-in{position:relative;width:min(100vw,calc(calc(var(--vh)*100)*.5625));height:calc(var(--vh)*100)}
 .pillar{position:absolute;bottom:0;width:15%;height:86%;
   background:repeating-linear-gradient(0deg,transparent 0 58px,rgba(0,0,0,.4) 58px 60px),linear-gradient(90deg,#2b2a33,#4d4c58 45%,#22212a);
   box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);transition:opacity 1.2s ease 1.5s}
@@ -90,9 +89,9 @@ h1{margin:0;font-family:'Pirata One','Georgia',serif;font-weight:400;text-align:
 .pillar.l{left:0}.pillar.r{right:0}
 .open .pillar,.open .sign{opacity:0}
 .sign{position:absolute;top:9%;left:50%;width:70%;transform:translateX(-50%);transition:opacity 1.2s ease 1.5s;filter:drop-shadow(0 0 14px rgba(255,120,30,.25))}
-.leaf{position:absolute;bottom:0;height:72%;width:35%;transition:transform 1.8s cubic-bezier(.55,.05,.25,1) .6s}
+.leaf{position:absolute;bottom:0;height:72%;width:35%;transform:perspective(1200px) rotateY(0deg);will-change:transform;transition:transform 1.8s cubic-bezier(.55,.05,.25,1) .6s}
 .leaf.l{left:15%;transform-origin:left center}.leaf.r{right:15%;transform-origin:right center}
-.open .leaf.l{transform:rotateY(78deg)}.open .leaf.r{transform:rotateY(-78deg)}
+.open .leaf.l{transform:perspective(1200px) rotateY(78deg)}.open .leaf.r{transform:perspective(1200px) rotateY(-78deg)}
 .lockbtn{position:absolute;left:50%;top:52%;width:92px;height:104px;margin:-34px 0 0 -46px;padding:0;border:0;background:none;
   cursor:pointer;z-index:3;display:flex;align-items:center;justify-content:center}
 .lockbtn svg{width:50px;animation:glow 1.8s ease-in-out infinite}
@@ -106,14 +105,11 @@ h1{margin:0;font-family:'Pirata One','Georgia',serif;font-weight:400;text-align:
 
 @media (min-aspect-ratio:1/1) and (min-width:700px){
   .stage{max-width:min(1100px,100vw);display:grid;grid-template-columns:1.2fr 1fr;
-    grid-template-areas:"title title" "tv text" "tv count";align-content:center;align-items:center;justify-items:center;
-    column-gap:3vw;row-gap:clamp(6px,1.6dvh,18px)}
-  h1{grid-area:title;font-size:clamp(44px,min(6vw,10dvh),88px)}
-  .tv{grid-area:tv;width:max(250px,min(46vw,620px,calc((100dvh - 210px)*1.08)))}
-  .invite{grid-area:text;align-self:end;font-size:clamp(20px,2.2vw,30px);max-width:20em}
-  .count{grid-area:count;align-self:start}
-  .count .c{min-width:clamp(62px,6vw,88px)}
-  .count b{font-size:clamp(30px,3.4vw,52px)}
+    grid-template-areas:"title title" "tv text";align-content:center;align-items:center;justify-items:center;
+    column-gap:3vw;row-gap:clamp(6px,calc(var(--vh)*1.6),18px)}
+  h1{grid-area:title;font-size:clamp(44px,min(6vw,calc(var(--vh)*10)),88px)}
+  .tv{grid-area:tv;width:max(250px,min(46vw,620px,calc((calc(var(--vh)*100) - 210px)*1.08)))}
+  .invite{grid-area:text;align-self:center;font-size:clamp(20px,2.2vw,30px);max-width:20em}
 }
 @media (prefers-reduced-motion:reduce){
   .fog{animation:none}
@@ -143,7 +139,7 @@ h1{margin:0;font-family:'Pirata One','Georgia',serif;font-weight:400;text-align:
           <div class="on">
             <canvas id="noise" width="160" height="120"></canvas>
             <div class="nosig" id="nosig"><span>SIN SEÑAL</span></div>
-            <div class="vid land" id="vid"><div id="yt"></div></div>
+            <div class="vid land" id="vid"><iframe id="yt" title="Video de la invitación" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
           </div>
           <div class="glass"></div>
         </div>
@@ -192,10 +188,11 @@ h1{margin:0;font-family:'Pirata One','Georgia',serif;font-weight:400;text-align:
 // También funciona agregando ?v=ENLACE al final de la dirección de la página.
 const VIDEO = "https://youtube.com/shorts/zgB24AuD6pM";
 
-
+// Segundos que la tele se queda "sin señal" (estática) antes de iniciar el video.
+const STATIC_SECONDS = 3;
 // Forma de tu video de YouTube: "horizontal" (normal) o "vertical" (tipo Reels/Shorts).
 const VIDEO_ORIENTATION = "vertical";
-const TV_ON_SECONDS = 4; // segundos después de quitar el candado antes de iniciar el video
+const TV_ON_SECONDS = 2.1; // lo que tarda en encenderse la tele después de abrir la reja
 
 // Texto de abajo. Cada pareja es [texto, estilo]. El estilo "hl" lo pone en naranja.
 const SEGMENTS = [
@@ -209,6 +206,9 @@ const SEGMENTS = [
 /* ===================================================== */
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = id => document.getElementById(id);
+// Altura real visible (funciona aunque el navegador no soporte "dvh")
+const setVh = () => document.documentElement.style.setProperty('--vh', (innerHeight*0.01)+'px');
+setVh(); addEventListener('resize', setVh); addEventListener('orientationchange', setVh);
 
 /* ---------- Reja ---------- */
 function leafSVG(){
@@ -246,123 +246,118 @@ setInterval(()=>{
   nctx.putImageData(img,0,0);
 }, 70);
 
-/* ---------- Video: reproducción única, pantalla completa y regreso a SIN SEÑAL ---------- */
+/* ---------- Video: se agranda a pantalla completa y al terminar se achica ---------- */
 const screenEl = $('screen');
-let ph = null, videoDone = false, big = false, playing = false, ytPlayer = null, finishTimer = null;
+let ph = null, videoDone = false, big = false, playing = false;
 $('vid').className = 'vid ' + (VIDEO_ORIENTATION === 'vertical' ? 'port' : 'land');
 const EASE = '.9s cubic-bezier(.65,0,.25,1)';
-let apiReadyResolve;
-const ytApiReady = new Promise(resolve => { apiReadyResolve = resolve; });
-window.onYouTubeIframeAPIReady = () => apiReadyResolve();
-const ytApiScript = document.createElement('script');
-ytApiScript.src = 'https://www.youtube.com/iframe_api';
-document.head.appendChild(ytApiScript);
 
 function expand(){
-  if(big) return;
-  big = true;
+  if(big) return; big = true;
   const r = screenEl.getBoundingClientRect();
   ph = document.createElement('div');
-  ph.style.cssText = `width:${r.width}px;height:${r.height}px;flex:none`;
+  ph.style.cssText = `width:${r.width}px;height:${r.height}px`;
   screenEl.parentNode.insertBefore(ph, screenEl);
   screenEl.style.cssText = `position:fixed;z-index:60;margin:0;aspect-ratio:auto;top:${r.top}px;left:${r.left}px;width:${r.width}px;height:${r.height}px;transition:top ${EASE},left ${EASE},width ${EASE},height ${EASE},border-radius ${EASE}`;
   void screenEl.offsetWidth;
   screenEl.classList.add('big');
-  screenEl.style.top = '0';
-  screenEl.style.left = '0';
-  screenEl.style.width = '100vw';
-  screenEl.style.height = '100dvh';
+  screenEl.style.top = '0'; screenEl.style.left = '0';
+  screenEl.style.width = '100vw'; screenEl.style.height = 'calc(var(--vh)*100)';
   screenEl.style.borderRadius = '0';
 }
 function shrink(){
   if(!big) return;
-  const r = ph ? ph.getBoundingClientRect() : null;
-  if(!r){ screenEl.style.cssText=''; big=false; return; }
+  const r = ph.getBoundingClientRect();
   screenEl.classList.remove('big');
-  screenEl.style.top = r.top+'px';
-  screenEl.style.left = r.left+'px';
-  screenEl.style.width = r.width+'px';
-  screenEl.style.height = r.height+'px';
+  screenEl.style.top = r.top+'px'; screenEl.style.left = r.left+'px';
+  screenEl.style.width = r.width+'px'; screenEl.style.height = r.height+'px';
   screenEl.style.borderRadius = '9% / 11%';
-  setTimeout(()=>{
-    screenEl.style.cssText = '';
-    if(ph){ ph.remove(); ph = null; }
-    big = false;
-  }, 950);
+  setTimeout(()=>{ screenEl.style.cssText = ''; ph.remove(); ph = null; big = false; }, 950);
 }
-function showStatic(){
-  screenEl.classList.remove('live','tap');
-  noiseOn = true;
-  $('noise').style.display = '';
-  $('nosig').style.display = '';
+let player = null, watchTimer = null, failsafe = null, lastCur = 0;
+const msg = {cur:0, dur:0, st:-1};
+
+function loadYT(){
+  if(window.YT && YT.Player) return;
+  if(document.getElementById('yt-api')) return;
+  const sc = document.createElement('script');
+  sc.id = 'yt-api'; sc.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(sc);
 }
-function endVideo(){
+// Decide si el video ya terminó (por estado, por tiempo, o porque volvió a empezar solo)
+function watch(cur, dur, state){
   if(videoDone) return;
-  videoDone = true;
-  playing = false;
-  if(finishTimer){ clearInterval(finishTimer); finishTimer = null; }
-  // Detener el reproductor y retirar el iframe para impedir que vuelva a reproducirse.
-  try { if(ytPlayer) ytPlayer.destroy(); } catch(_){}
-  ytPlayer = null;
-  // La API sustituye el contenedor por un iframe; al destruirlo, reconstruimos
-  // el contenedor vacío para que la televisión pueda quedarse en estática.
-  const host = $('vid');
-  host.innerHTML = '<div id="yt"></div>';
-  showStatic();
-  shrink();
+  if(state === 0) return endVideo();
+  if(state === 1){ playing = true; screenEl.classList.remove('tap'); }
+  if(!(dur > 1)) return;
+  if(state === 1 && !failsafe) failsafe = setTimeout(endVideo, Math.max(dur - cur, 0)*1000 + 3000);
+  if(cur > 1 && cur >= dur - 0.4) return endVideo();
+  if(lastCur > dur*0.6 && cur < lastCur - 1) return endVideo();
+  lastCur = cur;
 }
 function playVideo(){
-  if(!videoId){ showStatic(); return; }
-  videoDone = false;
-  playing = false;
-  showStatic();
-  expand();
-  ytApiReady.then(()=>{
+  const f = $('yt');
+  f.addEventListener('load', ()=>{
     if(videoDone) return;
-    const frame = $('yt');
-    if(!frame) return;
-    // La API oficial crea el iframe dentro del contenedor y reporta el evento ENDED.
-    ytPlayer = new YT.Player('yt', {
-      videoId: videoId,
-      playerVars: {
-        autoplay: 1, controls: 0, disablekb: 1, fs: 0,
-        playsinline: 1, rel: 0, modestbranding: 1, loop: 0,
-        origin: location.origin
-      },
-      events: {
-        onReady: ev => {
-          if(videoDone) { try{ev.target.stopVideo();}catch(_){}; return; }
-          try { ev.target.mute(); ev.target.playVideo(); } catch(_){}
-          // Algunos navegadores bloquean autoplay; permitir tocar la pantalla para iniciar.
-          setTimeout(()=>{ if(!playing && !videoDone) screenEl.classList.add('tap'); }, 4500);
-          // Respaldo: consulta el tiempo del video por si el evento ENDED no llega.
-          finishTimer = setInterval(()=>{
-            if(videoDone || !ytPlayer) { clearInterval(finishTimer); finishTimer=null; return; }
-            try {
-              const duration = ytPlayer.getDuration(), current = ytPlayer.getCurrentTime(), state = ytPlayer.getPlayerState();
-              if(duration > 0 && current >= duration - 0.45 && state !== YT.PlayerState.PLAYING) endVideo();
-            } catch(_){}
-          }, 500);
-        },
-        onStateChange: ev => {
-          if(videoDone) return;
-          if(ev.data === YT.PlayerState.PLAYING){
-            playing = true;
-            screenEl.classList.remove('tap');
-            screenEl.classList.add('live');
-            noiseOn = false;
-            $('nosig').style.display = 'none';
-            $('noise').style.display = 'none';
-            try { ytPlayer.unMute(); } catch(_){}
-          } else if(ev.data === YT.PlayerState.ENDED){
-            endVideo();
-          }
-        },
+    setTimeout(()=>{
+      if(videoDone) return;
+      screenEl.classList.add('live'); noiseOn = false;
+      $('nosig').style.display = 'none'; $('noise').style.display = 'none';
+    }, 900);
+    // Si el celular no deja iniciar solo, se habilita un toque para dar play
+    setTimeout(()=>{ if(!playing && !videoDone) screenEl.classList.add('tap'); }, 5000);
+    let tries = 0;
+    const iv = setInterval(()=>{
+      if(videoDone || ++tries > 12) return clearInterval(iv);
+      try{ f.contentWindow.postMessage(JSON.stringify({event:'listening',id:1,channel:'widget'}),'*'); }catch(_){}
+    }, 800);
+  }, {once:true});
+  const o = location.protocol.startsWith('http') ? '&origin='+encodeURIComponent(location.origin) : '';
+  f.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&enablejsapi=1${o}`;
+  expand();
+
+  const make = () => {
+    if(player || videoDone) return;
+    try{
+      player = new YT.Player('yt', { events:{
+        onReady: e => { try{ e.target.playVideo(); }catch(_){} },
+        onStateChange: e => { if(e.data === 1){ playing = true; screenEl.classList.remove('tap'); } if(e.data === 0) endVideo(); },
         onError: () => endVideo()
-      }
-    });
-  }).catch(()=>showStatic());
+      }});
+      watchTimer = setInterval(()=>{
+        if(videoDone || !player || !player.getCurrentTime) return;
+        try{ watch(player.getCurrentTime(), player.getDuration(), player.getPlayerState()); }catch(_){}
+      }, 250);
+    }catch(_){}
+  };
+  if(window.YT && YT.Player) make();
+  else { window.onYouTubeIframeAPIReady = make; loadYT(); }
 }
+function endVideo(){
+  if(videoDone) return; videoDone = true;
+  clearInterval(watchTimer); clearTimeout(failsafe); player = null;
+  $('yt').src = 'about:blank';
+  screenEl.classList.remove('live','tap'); noiseOn = true;
+  $('noise').style.display = ''; $('nosig').style.display = '';
+  shrink();
+}
+// Respaldo: mensajes directos del reproductor de YouTube
+window.addEventListener('message', e=>{
+  if(e.source !== $('yt').contentWindow) return;
+  let d = e.data;
+  if(typeof d === 'string'){ try{ d = JSON.parse(d); }catch(_){ return; } }
+  if(!d) return;
+  if(d.event === 'onStateChange') msg.st = d.info;
+  if(d.event === 'infoDelivery' || d.event === 'initialDelivery'){
+    const i = d.info || {};
+    if(typeof i.currentTime === 'number') msg.cur = i.currentTime;
+    if(typeof i.duration === 'number' && i.duration > 0) msg.dur = i.duration;
+    if(typeof i.playerState === 'number') msg.st = i.playerState;
+  }
+  watch(msg.cur, msg.dur, msg.st);
+});
+loadYT();
+
 /* ---------- Abrir la reja ---------- */
 const gate = $('gate');
 let started = false;
@@ -371,7 +366,7 @@ function openGate(){
   started = true;
   gate.classList.add('open');
   document.body.classList.add('opened');
-  if(videoId) setTimeout(playVideo, TV_ON_SECONDS*1000);
+  if(videoId) setTimeout(playVideo, (TV_ON_SECONDS + STATIC_SECONDS)*1000);
   setTimeout(()=>gate.classList.add('done'), 3400);
   setTimeout(typeText, reduce ? 0 : 2300);
 }
@@ -522,6 +517,7 @@ function drawWitch(f){
 }
 
 /* ----- vuelo ----- */
+resize();
 const flyers = [];
 function make(type){
   const f = {type,t:rnd(0,9),ph:rnd(0,6),wait:0};
@@ -555,7 +551,6 @@ function frame(now){
   requestAnimationFrame(frame);
 }
 addEventListener('resize', resize);
-resize();
 requestAnimationFrame(frame);
 </script>
 </body>
