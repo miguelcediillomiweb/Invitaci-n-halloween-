@@ -246,11 +246,17 @@ setInterval(()=>{
   nctx.putImageData(img,0,0);
 }, 70);
 
-/* ---------- Video: se agranda a pantalla completa y vuelve a su lugar al terminar ---------- */
+/* ---------- Video: reproducción única, pantalla completa y regreso a SIN SEÑAL ---------- */
 const screenEl = $('screen');
-let ph = null, videoDone = false, big = false, playing = false;
+let ph = null, videoDone = false, big = false, playing = false, ytPlayer = null, finishTimer = null;
 $('vid').className = 'vid ' + (VIDEO_ORIENTATION === 'vertical' ? 'port' : 'land');
 const EASE = '.9s cubic-bezier(.65,0,.25,1)';
+let apiReadyResolve;
+const ytApiReady = new Promise(resolve => { apiReadyResolve = resolve; });
+window.onYouTubeIframeAPIReady = () => apiReadyResolve();
+const ytApiScript = document.createElement('script');
+ytApiScript.src = 'https://www.youtube.com/iframe_api';
+document.head.appendChild(ytApiScript);
 
 function expand(){
   if(big) return;
@@ -270,7 +276,8 @@ function expand(){
 }
 function shrink(){
   if(!big) return;
-  const r = ph.getBoundingClientRect();
+  const r = ph ? ph.getBoundingClientRect() : null;
+  if(!r){ screenEl.style.cssText=''; big=false; return; }
   screenEl.classList.remove('big');
   screenEl.style.top = r.top+'px';
   screenEl.style.left = r.left+'px';
@@ -283,66 +290,77 @@ function shrink(){
     big = false;
   }, 950);
 }
-function sendYT(func, args=[]){
-  try { $('yt').contentWindow.postMessage(JSON.stringify({event:'command',func,args}), '*'); } catch(_){}
-}
-function playVideo(){
-  if(!videoId){ endVideo(); return; }
-  const f = $('yt');
-  videoDone = false;
-  playing = false;
+function showStatic(){
   screenEl.classList.remove('live','tap');
-  $('nosig').style.display = '';
-  $('noise').style.display = '';
   noiseOn = true;
-  f.onload = () => {
-    // Suscribir el reproductor al evento que avisa cuando el video termina.
-    setTimeout(()=>{
-      try {
-        f.contentWindow.postMessage(JSON.stringify({event:'listening',id:1,channel:'widget'}),'*');
-        sendYT('addEventListener',['onStateChange']);
-      } catch(_){}
-    }, 300);
-    // La animación y la expansión empiezan al cumplirse los dos segundos.
-    setTimeout(()=>{
-      if(videoDone) return;
-      screenEl.classList.add('live');
-      noiseOn = false;
-      $('nosig').style.display = 'none';
-      $('noise').style.display = 'none';
-    }, 900);
-    setTimeout(()=>{ if(!playing && !videoDone) screenEl.classList.add('tap'); }, 5000);
-  };
-  const o = location.protocol.startsWith('http') ? '&origin='+encodeURIComponent(location.origin) : '';
-  f.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&enablejsapi=1${o}`;
-  expand();
+  $('noise').style.display = '';
+  $('nosig').style.display = '';
 }
 function endVideo(){
   if(videoDone) return;
   videoDone = true;
   playing = false;
-  $('yt').src = 'about:blank';
-  screenEl.classList.remove('live','tap');
-  noiseOn = true;
-  $('noise').style.display = '';
-  $('nosig').style.display = '';
+  if(finishTimer){ clearInterval(finishTimer); finishTimer = null; }
+  // Detener el reproductor y retirar el iframe para impedir que vuelva a reproducirse.
+  try { if(ytPlayer) ytPlayer.stopVideo(); } catch(_){}
+  ytPlayer = null;
+  const oldFrame = $('yt');
+  if(oldFrame) oldFrame.src = 'about:blank';
+  showStatic();
   shrink();
 }
-window.addEventListener('message', e=>{
-  if(e.source !== $('yt').contentWindow) return;
-  let d = e.data;
-  if(typeof d === 'string'){ try{ d = JSON.parse(d); }catch(_){ return; } }
-  if(d && d.event === 'onStateChange'){
-    if(d.info === 1){
-      playing = true;
-      screenEl.classList.remove('tap');
-      // Intentar recuperar el audio una vez iniciado el video.
-      sendYT('unMute');
-    }
-    if(d.info === 0) endVideo();
-  }
-});
-
+function playVideo(){
+  if(!videoId){ showStatic(); return; }
+  videoDone = false;
+  playing = false;
+  showStatic();
+  expand();
+  ytApiReady.then(()=>{
+    if(videoDone) return;
+    const frame = $('yt');
+    if(!frame) return;
+    // Usa la API oficial del reproductor para detectar ENDED de forma fiable.
+    ytPlayer = new YT.Player('yt', {
+      videoId: videoId,
+      playerVars: {
+        autoplay: 1, controls: 0, disablekb: 1, fs: 0,
+        playsinline: 1, rel: 0, modestbranding: 1, loop: 0,
+        origin: location.origin
+      },
+      events: {
+        onReady: ev => {
+          if(videoDone) { try{ev.target.stopVideo();}catch(_){}; return; }
+          try { ev.target.mute(); ev.target.playVideo(); } catch(_){}
+          // Algunos navegadores bloquean autoplay; permitir tocar la pantalla para iniciar.
+          setTimeout(()=>{ if(!playing && !videoDone) screenEl.classList.add('tap'); }, 4500);
+          // Respaldo: consulta el tiempo del video por si el evento ENDED no llega.
+          finishTimer = setInterval(()=>{
+            if(videoDone || !ytPlayer) { clearInterval(finishTimer); finishTimer=null; return; }
+            try {
+              const duration = ytPlayer.getDuration(), current = ytPlayer.getCurrentTime(), state = ytPlayer.getPlayerState();
+              if(duration > 0 && current >= duration - 0.45 && state !== YT.PlayerState.PLAYING) endVideo();
+            } catch(_){}
+          }, 500);
+        },
+        onStateChange: ev => {
+          if(videoDone) return;
+          if(ev.data === YT.PlayerState.PLAYING){
+            playing = true;
+            screenEl.classList.remove('tap');
+            screenEl.classList.add('live');
+            noiseOn = false;
+            $('nosig').style.display = 'none';
+            $('noise').style.display = 'none';
+            try { ytPlayer.unMute(); } catch(_){}
+          } else if(ev.data === YT.PlayerState.ENDED){
+            endVideo();
+          }
+        },
+        onError: () => endVideo()
+      }
+    });
+  }).catch(()=>showStatic());
+}
 /* ---------- Abrir la reja ---------- */
 const gate = $('gate');
 let started = false;
