@@ -74,12 +74,6 @@ h1{margin:0;font-family:'Pirata One','Georgia',serif;font-weight:400;text-align:
 .screen .glass{transition:opacity .8s}
 .screen.big .glass{opacity:0}
 
-.count{display:flex;gap:clamp(8px,2.4vw,14px);opacity:0;transform:translateY(8px);transition:opacity 1s,transform 1s;text-align:center}
-.count.show{opacity:1;transform:none}
-.count .c{min-width:clamp(54px,16vw,72px);padding:6px 4px 5px;border:1px solid rgba(255,122,26,.45);border-radius:8px;background:rgba(10,6,18,.55);box-shadow:0 0 14px rgba(255,100,20,.18)}
-.count b{display:block;font:400 clamp(26px,8vw,38px)/1 'Pirata One',serif;color:var(--pumpkin);text-shadow:0 0 10px rgba(255,122,26,.6);font-variant-numeric:tabular-nums}
-.count small{font-size:clamp(9px,2.4vw,11px);letter-spacing:.14em;text-transform:uppercase;opacity:.8}
-.count.done{display:block;font-family:'Pirata One',serif;font-size:clamp(24px,7vw,34px);color:var(--pumpkin);text-shadow:0 0 12px rgba(255,122,26,.7)}
 
 /* ===== REJA DEL CEMENTERIO ===== */
 .gate{position:fixed;inset:0;z-index:10;background:rgba(4,3,9,.6);outline:none;
@@ -165,7 +159,6 @@ h1{margin:0;font-family:'Pirata One','Georgia',serif;font-weight:400;text-align:
   </div>
 
   <p class="invite" id="invite" aria-live="polite"></p>
-  <div class="count" id="count"></div>
 </main>
 
 <div class="gate" id="gate">
@@ -199,14 +192,10 @@ h1{margin:0;font-family:'Pirata One','Georgia',serif;font-weight:400;text-align:
 // También funciona agregando ?v=ENLACE al final de la dirección de la página.
 const VIDEO = "https://youtube.com/shorts/zgB24AuD6pM";
 
-// Segundos que la tele se queda "sin señal" (estática) antes de iniciar el video.
-const STATIC_SECONDS = 3;
-// Fecha y hora del evento para la cuenta regresiva (usa la hora del celular de cada persona).
-const EVENT_DATE = "2026-10-31T19:00:00";
 
 // Forma de tu video de YouTube: "horizontal" (normal) o "vertical" (tipo Reels/Shorts).
 const VIDEO_ORIENTATION = "vertical";
-const TV_ON_SECONDS = 2.1; // lo que tarda en encenderse la tele después de abrir la reja
+const TV_ON_SECONDS = 2; // segundos después de quitar el candado antes de iniciar el video
 
 // Texto de abajo. Cada pareja es [texto, estilo]. El estilo "hl" lo pone en naranja.
 const SEGMENTS = [
@@ -257,60 +246,86 @@ setInterval(()=>{
   nctx.putImageData(img,0,0);
 }, 70);
 
-/* ---------- Video: se agranda a pantalla completa y al terminar se achica ---------- */
+/* ---------- Video: se agranda a pantalla completa y vuelve a su lugar al terminar ---------- */
 const screenEl = $('screen');
 let ph = null, videoDone = false, big = false, playing = false;
 $('vid').className = 'vid ' + (VIDEO_ORIENTATION === 'vertical' ? 'port' : 'land');
 const EASE = '.9s cubic-bezier(.65,0,.25,1)';
 
 function expand(){
-  if(big) return; big = true;
+  if(big) return;
+  big = true;
   const r = screenEl.getBoundingClientRect();
   ph = document.createElement('div');
-  ph.style.cssText = `width:${r.width}px;height:${r.height}px`;
+  ph.style.cssText = `width:${r.width}px;height:${r.height}px;flex:none`;
   screenEl.parentNode.insertBefore(ph, screenEl);
   screenEl.style.cssText = `position:fixed;z-index:60;margin:0;aspect-ratio:auto;top:${r.top}px;left:${r.left}px;width:${r.width}px;height:${r.height}px;transition:top ${EASE},left ${EASE},width ${EASE},height ${EASE},border-radius ${EASE}`;
   void screenEl.offsetWidth;
   screenEl.classList.add('big');
-  screenEl.style.top = '0'; screenEl.style.left = '0';
-  screenEl.style.width = '100vw'; screenEl.style.height = '100dvh';
+  screenEl.style.top = '0';
+  screenEl.style.left = '0';
+  screenEl.style.width = '100vw';
+  screenEl.style.height = '100dvh';
   screenEl.style.borderRadius = '0';
 }
 function shrink(){
   if(!big) return;
   const r = ph.getBoundingClientRect();
   screenEl.classList.remove('big');
-  screenEl.style.top = r.top+'px'; screenEl.style.left = r.left+'px';
-  screenEl.style.width = r.width+'px'; screenEl.style.height = r.height+'px';
+  screenEl.style.top = r.top+'px';
+  screenEl.style.left = r.left+'px';
+  screenEl.style.width = r.width+'px';
+  screenEl.style.height = r.height+'px';
   screenEl.style.borderRadius = '9% / 11%';
-  setTimeout(()=>{ screenEl.style.cssText = ''; ph.remove(); ph = null; big = false; }, 950);
+  setTimeout(()=>{
+    screenEl.style.cssText = '';
+    if(ph){ ph.remove(); ph = null; }
+    big = false;
+  }, 950);
+}
+function sendYT(func, args=[]){
+  try { $('yt').contentWindow.postMessage(JSON.stringify({event:'command',func,args}), '*'); } catch(_){}
 }
 function playVideo(){
+  if(!videoId){ endVideo(); return; }
   const f = $('yt');
-  f.addEventListener('load', ()=>{
-    if(videoDone) return;
+  videoDone = false;
+  playing = false;
+  screenEl.classList.remove('live','tap');
+  $('nosig').style.display = '';
+  $('noise').style.display = '';
+  noiseOn = true;
+  f.onload = () => {
+    // Suscribir el reproductor al evento que avisa cuando el video termina.
+    setTimeout(()=>{
+      try {
+        f.contentWindow.postMessage(JSON.stringify({event:'listening',id:1,channel:'widget'}),'*');
+        sendYT('addEventListener',['onStateChange']);
+      } catch(_){}
+    }, 300);
+    // La animación y la expansión empiezan al cumplirse los dos segundos.
     setTimeout(()=>{
       if(videoDone) return;
-      screenEl.classList.add('live'); noiseOn = false;
-      $('nosig').style.display = 'none'; $('noise').style.display = 'none';
+      screenEl.classList.add('live');
+      noiseOn = false;
+      $('nosig').style.display = 'none';
+      $('noise').style.display = 'none';
     }, 900);
-    // Si el celular no deja iniciar solo, se habilita un toque para dar play
     setTimeout(()=>{ if(!playing && !videoDone) screenEl.classList.add('tap'); }, 5000);
-    let tries = 0;
-    const iv = setInterval(()=>{
-      if(videoDone || ++tries > 12) return clearInterval(iv);
-      try{ f.contentWindow.postMessage(JSON.stringify({event:'listening',id:1,channel:'widget'}),'*'); }catch(_){}
-    }, 800);
-  }, {once:true});
+  };
   const o = location.protocol.startsWith('http') ? '&origin='+encodeURIComponent(location.origin) : '';
-  f.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&playsinline=1&rel=0&modestbranding=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&enablejsapi=1${o}`;
+  f.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1&controls=0&disablekb=1&fs=0&iv_load_policy=3&enablejsapi=1${o}`;
   expand();
 }
 function endVideo(){
-  if(videoDone) return; videoDone = true;
+  if(videoDone) return;
+  videoDone = true;
+  playing = false;
   $('yt').src = 'about:blank';
-  screenEl.classList.remove('live','tap'); noiseOn = true;
-  $('noise').style.display = ''; $('nosig').style.display = '';
+  screenEl.classList.remove('live','tap');
+  noiseOn = true;
+  $('noise').style.display = '';
+  $('nosig').style.display = '';
   shrink();
 }
 window.addEventListener('message', e=>{
@@ -318,7 +333,12 @@ window.addEventListener('message', e=>{
   let d = e.data;
   if(typeof d === 'string'){ try{ d = JSON.parse(d); }catch(_){ return; } }
   if(d && d.event === 'onStateChange'){
-    if(d.info === 1){ playing = true; screenEl.classList.remove('tap'); }
+    if(d.info === 1){
+      playing = true;
+      screenEl.classList.remove('tap');
+      // Intentar recuperar el audio una vez iniciado el video.
+      sendYT('unMute');
+    }
     if(d.info === 0) endVideo();
   }
 });
@@ -331,26 +351,11 @@ function openGate(){
   started = true;
   gate.classList.add('open');
   document.body.classList.add('opened');
-  if(videoId) setTimeout(playVideo, (TV_ON_SECONDS + STATIC_SECONDS)*1000);
+  if(videoId) setTimeout(playVideo, TV_ON_SECONDS*1000);
   setTimeout(()=>gate.classList.add('done'), 3400);
   setTimeout(typeText, reduce ? 0 : 2300);
 }
 $('lockbtn').addEventListener('click', openGate);
-
-/* ---------- Cuenta regresiva ---------- */
-const countEl = $('count');
-const target = new Date(EVENT_DATE).getTime();
-function tick(){
-  const d = target - Date.now();
-  if(d <= 0){
-    if(!countEl.classList.contains('done')){ countEl.classList.add('done'); countEl.textContent = '¡Ya es la hora, te esperamos!'; }
-    return;
-  }
-  const t = Math.floor(d/1000), p = n => String(n).padStart(2,'0');
-  const parts = [[Math.floor(t/86400),'días'],[Math.floor(t%86400/3600),'horas'],[Math.floor(t%3600/60),'min'],[t%60,'seg']];
-  countEl.innerHTML = parts.map(([n,l]) => `<div class="c"><b>${p(n)}</b><small>${l}</small></div>`).join('');
-}
-if(isNaN(target)) countEl.style.display = 'none'; else { tick(); setInterval(tick, 1000); }
 
 /* ---------- Texto que se escribe solo ---------- */
 function typeText(){
@@ -366,12 +371,12 @@ function typeText(){
     }
     el.innerHTML = out;
   };
-  if(reduce){ render(total); countEl.classList.add('show'); return; }
+  if(reduce){ render(total); return; }
   el.classList.add('typing');
   let n = 0;
   const id = setInterval(()=>{
     render(++n);
-    if(n>=total){ clearInterval(id); countEl.classList.add('show'); setTimeout(()=>el.classList.remove('typing'), 1500); }
+    if(n>=total){ clearInterval(id); setTimeout(()=>el.classList.remove('typing'), 1500); }
   }, 48);
 }
 
