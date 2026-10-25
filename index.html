@@ -143,7 +143,7 @@ h1{margin:0;font-family:'Pirata One','Georgia',serif;font-weight:400;text-align:
           <div class="on">
             <canvas id="noise" width="160" height="120"></canvas>
             <div class="nosig" id="nosig"><span>SIN SEÑAL</span></div>
-            <div class="vid land" id="vid"><iframe id="yt" title="Video de la invitación" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>
+            <div class="vid land" id="vid"><div id="yt"></div></div>
           </div>
           <div class="glass"></div>
         </div>
@@ -195,7 +195,7 @@ const VIDEO = "https://youtube.com/shorts/zgB24AuD6pM";
 
 // Forma de tu video de YouTube: "horizontal" (normal) o "vertical" (tipo Reels/Shorts).
 const VIDEO_ORIENTATION = "vertical";
-const TV_ON_SECONDS = 2; // segundos después de quitar el candado antes de iniciar el video
+const TV_ON_SECONDS = 4; // segundos después de quitar el candado antes de iniciar el video
 
 // Texto de abajo. Cada pareja es [texto, estilo]. El estilo "hl" lo pone en naranja.
 const SEGMENTS = [
@@ -302,10 +302,12 @@ function endVideo(){
   playing = false;
   if(finishTimer){ clearInterval(finishTimer); finishTimer = null; }
   // Detener el reproductor y retirar el iframe para impedir que vuelva a reproducirse.
-  try { if(ytPlayer) ytPlayer.stopVideo(); } catch(_){}
+  try { if(ytPlayer) ytPlayer.destroy(); } catch(_){}
   ytPlayer = null;
-  const oldFrame = $('yt');
-  if(oldFrame) oldFrame.src = 'about:blank';
+  // La API sustituye el contenedor por un iframe; al destruirlo, reconstruimos
+  // el contenedor vacío para que la televisión pueda quedarse en estática.
+  const host = $('vid');
+  host.innerHTML = '<div id="yt"></div>';
   showStatic();
   shrink();
 }
@@ -319,7 +321,7 @@ function playVideo(){
     if(videoDone) return;
     const frame = $('yt');
     if(!frame) return;
-    // Usa la API oficial del reproductor para detectar ENDED de forma fiable.
+    // La API oficial crea el iframe dentro del contenedor y reporta el evento ENDED.
     ytPlayer = new YT.Player('yt', {
       videoId: videoId,
       playerVars: {
