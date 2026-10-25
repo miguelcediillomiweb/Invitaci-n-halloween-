@@ -22,7 +22,7 @@ html,body{margin:0;height:100%;background:var(--night);overflow:hidden;font-fami
 /* ===== ESCENA PRINCIPAL ===== */
 .stage{position:relative;z-index:2;height:calc(var(--vh)*100);max-width:min(100vw,calc(calc(var(--vh)*100)*.5625));margin:0 auto;padding:10px 12px 16px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(6px,calc(var(--vh)*1.6),18px);
-  filter:brightness(.25) blur(3px);transition:filter 1.6s ease 1s}
+  filter:brightness(.25) blur(3px);transition:filter 1s ease .4s}
 .opened .stage{filter:none}
 h1{margin:0;font-family:'Pirata One','Georgia',serif;font-weight:400;text-align:center;line-height:1;letter-spacing:.01em;
   font-size:clamp(40px,min(13vw,calc(var(--vh)*8)),70px);color:var(--pumpkin);
@@ -186,13 +186,14 @@ h1{margin:0;font-family:'Pirata One','Georgia',serif;font-weight:400;text-align:
    ===================================================== */
 // Pega el enlace de YouTube completo o solo el ID del video (11 caracteres).
 // También funciona agregando ?v=ENLACE al final de la dirección de la página.
-const VIDEO = "https://youtube.com/shorts/zgB24AuD6pM";
+const VIDEO = "https://youtube.com/shorts/c--o3jIHYTk";
 
-// Segundos que la tele se queda "sin señal" (estática) antes de iniciar el video.
-const STATIC_SECONDS = 3;
+// Al tocar el candado: a los 2 segundos la pantalla de la tele empieza a hacerse grande
+// (con "SIN SEÑAL"); 2 segundos después de eso empieza el video.
+const GROW_AFTER_SECONDS = 2;
+const STATIC_SECONDS = 2;
 // Forma de tu video de YouTube: "horizontal" (normal) o "vertical" (tipo Reels/Shorts).
 const VIDEO_ORIENTATION = "vertical";
-const TV_ON_SECONDS = 2.1; // lo que tarda en encenderse la tele después de abrir la reja
 
 // Texto de abajo. Cada pareja es [texto, estilo]. El estilo "hl" lo pone en naranja.
 const SEGMENTS = [
@@ -303,7 +304,7 @@ function playVideo(){
       if(videoDone) return;
       screenEl.classList.add('live'); noiseOn = false;
       $('nosig').style.display = 'none'; $('noise').style.display = 'none';
-    }, 900);
+    }, 600);
     // Si el celular no deja iniciar solo, se habilita un toque para dar play
     setTimeout(()=>{ if(!playing && !videoDone) screenEl.classList.add('tap'); }, 5000);
     let tries = 0;
@@ -366,8 +367,11 @@ function openGate(){
   started = true;
   gate.classList.add('open');
   document.body.classList.add('opened');
-  if(videoId) setTimeout(playVideo, (TV_ON_SECONDS + STATIC_SECONDS)*1000);
-  setTimeout(()=>gate.classList.add('done'), 3400);
+  if(videoId){
+    setTimeout(expand, GROW_AFTER_SECONDS*1000);
+    setTimeout(playVideo, (GROW_AFTER_SECONDS + STATIC_SECONDS)*1000);
+  }
+  setTimeout(()=>gate.classList.add('done'), 2800);
   setTimeout(typeText, reduce ? 0 : 2300);
 }
 $('lockbtn').addEventListener('click', openGate);
